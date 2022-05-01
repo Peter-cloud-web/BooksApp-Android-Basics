@@ -12,9 +12,6 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.BooksApp">
         <activity
-            android:name=".DetailsActivity"
-            android:exported="true" />
-        <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
