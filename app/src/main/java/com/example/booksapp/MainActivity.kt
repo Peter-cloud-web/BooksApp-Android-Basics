@@ -6,50 +6,56 @@ import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.booksapp.adapter.BooksAdapter
 import com.example.booksapp.api.NetworkCall
-import com.example.booksapp.model.Book
 import com.example.booksapp.model.BooksResponse
 import kotlinx.android.synthetic.main.activity_main.*
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        swipeRefresh.setOnRefreshListener {
-            fetchMovies()
-        }
 
-        fetchMovies()
+        swipeRefresh.setOnRefreshListener {
+            fetchBooks()
+        }
+        fetchBooks()
     }
 
-    private fun fetchMovies(){
+    private fun fetchBooks(){
         swipeRefresh.isRefreshing = true
 
-        NetworkCall.provideMovies.getBooks().enqueue(object : Callback<BooksResponse> {
-            override fun onFailure(call: Call<BooksResponse>, t: Throwable) {
-                swipeRefresh.isRefreshing = false
-                Toast.makeText(applicationContext, t.message, Toast.LENGTH_LONG).show()
-            }
+        CoroutineScope(Dispatchers.Main).launch {
 
-            override fun onResponse(call: Call<BooksResponse>, response: Response<BooksResponse>) {
-                swipeRefresh.isRefreshing = false
-                val books = response.body()
+            try{
 
-                books?.let {
-                    showBooks(it)
+                val response = NetworkCall.provideMovies.getBooks()
+                if(response.isSuccessful && response.body() != null){
+                  swipeRefresh.isRefreshing = false
+                  val data = response.body()
+                  data?.let{
+                      showBooks(it)
+                  }
+                }else{
+
                 }
-            }
 
-        })
+            } catch(e:Exception){
+                Toast.makeText(this@MainActivity,
+                    "Error Occurred: ${e.message}",
+                    Toast.LENGTH_LONG).show()
+            }
+        }
+
+
 
         }
 
     private fun showBooks(book: BooksResponse) {
         recyclerViewBooks.layoutManager = LinearLayoutManager(this)
-        recyclerViewBooks.adapter = BooksAdapter(book)
+        recyclerViewBooks.adapter = BooksAdapter(book,this)
     }
 }
 
